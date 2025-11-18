@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PSAS by:SALIM</title>
+<style>
+
+/* Nonaktifkan pemilihan teks di seluruh halaman */
+body {
+    user-select: none;
+}
+
+/* Tambahkan ini di bagian CSS */
+#toggleNumberList {
+    margin-top: 10px;
+}
+
+.number-list.hide {
+    display: none;
+}
+
+/* Tambahkan ini di bagian CSS */
+.num-btn.answered {
+    background-color: #10b981; /* Hijau */
+    color: white;
+    border-color: #059669;
+}
+
+.num-btn.unanswered {
+    background-color: #d1d5db; /* Abu-abu */
+    color: #333;
+    border-color: #9ca3af;
+}
+
+/* ===== GLOBAL ===== */
+body { margin:0; font-family:'Poppins',sans-serif; background:#e2e8f0; color:#333; }
+.container { max-width:900px; margin:auto; padding:20px; }
+.card { background:#fff; padding:25px; border-radius:15px; box-shadow:0 8px 20px rgba(0,0,0,0.1); transition:0.3s; }
+.hide { display:none; }
+h2,h3{margin-bottom:15px;}
+input,textarea{border:1px solid #ccc; border-radius:8px; padding:10px; font-size:15px;}
+#kelas {
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    width: 100%;
+    max-width: 200px;
+    cursor: pointer;
+}
+
+
+/* ===== BUTTONS ===== */
+.btn{ padding:10px 20px; border:none; border-radius:10px; cursor:pointer; font-size:15px; margin:5px; transition:0.2s; }
+.btn-primary{ background:#4f46e5; color:#fff; }
+.btn-primary:hover{ background:#4338ca; }
+.btn-secondary{ background:#6b7280; color:#fff; }
+.btn-secondary:hover{ background:#4b5563; }
+.btn-danger{ background:#ef4444; color:#fff; }
+.btn-danger:hover{ background:#b91c1c; }
+.btn:active{ transform:scale(0.93); transition:0.1s; }
+.btn:hover{ box-shadow:0 4px 10px rgba(0,0,0,0.15); }
+
+.number-list { margin-bottom:20px; display:flex; flex-wrap:wrap; gap:5px; }
+.num-btn { width:40px; height:40px; display:flex; justify-content:center; align-items:center; background:#d1d5db; border-radius:8px; font-weight:bold; cursor:pointer; border:2px solid transparent; transition:0.2s; }
+.num-btn:hover{ background:#9ca3af; }
+.num-active { background:#4f46e5; color:#fff; border-color:#4338ca; }
+
+.slide-left{ animation: slideLeft 0.3s ease; }
+@keyframes slideLeft{ from{opacity:0; transform:translateX(40px);} to{opacity:1; transform:translateX(0);} }
+.slide-right{ animation: slideRight 0.3s ease; }
+@keyframes slideRight{ from{opacity:0; transform:translateX(-40px);} to{opacity:1; transform:translateX(0);} }
+
+@media(max-width:600px){ .number-list{justify-content:center;} .btn{width:100%; margin:5px 0;} }
+
+
+/* === TOAST === */
+.toast {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+    background: rgba(0,0,0,0.3);
+    z-index: 9999;
+}
+
+.toast.hidden {
+    display: none;
+}
+
+.toast-content {
+    background: rgba(255,255,255,0.85);
+    padding: 20px 25px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 25px rgba(0,0,0,0.3);
+}
+
+.toast-content button {
+    margin-top: 10px;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 6px;
+    background: #0074ff;
+    color: white;
+    cursor: pointer;
+}
+
+/* === CONFIRM MODAL === */
+.confirm {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+    background: rgba(0,0,0,0.35);
+    z-index: 10000;
+}
+
+.confirm.hidden {
+    display: none;
+}
+
+.confirm-content {
+    background: rgba(255,255,255,0.9);
+    padding: 25px;
+    border-radius: 14px;
+    width: 300px;
+    text-align: center;
+    box-shadow: 0 4px 25px rgba(0,0,0,0.3);
+}
+
+.btn-row {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.btn-row button {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #007bff;
+    color: white;
+}
+
+.btn-row button:last-child {
+    background: #666;
+}
+
+/* === GANTI CSS KAMERA === */
+#cameraContainer {
+    /* Hapus position: fixed; supaya menyatu dengan layout */
+    display: none; /* Default sembunyi, muncul lewat JS */
+    width: 150px;  /* Lebar kamera */
+    height: 115px; /* Tinggi kamera */
+    background-color: #000;
+    border: 2px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0; /* Mencegah kamera mengecil */
+}
+
+#webcam {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1); /* Efek cermin */
+}
+
+/* Container baru untuk mengatur Text di Kiri, Kamera di Kanan */
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+/* Agar responsif di HP (Kamera tetap di samping atau menyesuaikan) */
+@media(max-width: 600px) {
+    .header-content {
+        align-items: center;
+    }
+    #cameraContainer {
+        width: 100px;
+        height: 75px;
+    }
+}
+
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast hidden">
+    <div class="toast-content">
+        <p id="toastMessage"></p>
+        <button onclick="closeToast()">OK</button>
+    </div>
+</div>
+
+<div id="confirmBox" class="confirm hidden">
+    <div class="confirm-content">
+        <p id="confirmMessage">Apa kamu yakin mengumpulkan?</p>
+        <div class="btn-row">
+            <button id="confirmYes">Ya</button>
+            <button id="confirmNo">Tidak</button>
+        </div>
+    </div>
+</div>
+
+
+<div class="container">
+
+<div id="startPage" class="card">
+    <h2 style="display: flex; align-items: center;">
+        <img src="logo.png" alt="Logo" style="width: 50px; height: 50px; margin-right: 10px;">
+        SMP Negeri 3 Babat
+    </h2>
+    <h3 align="center">Penilaian Sumatif Akhir Semester<br>Tahun Pelajaran 2025/2026</h3>
+
+	<div style="background-color: papayawhip; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); width: 80%; max-width: 600px; text-align: justify; margin: 20px auto;">
+        <span style="font-weight: bold; color: #0066cc;">Mata Pelajaran:</span> <b>Koding / KKA</b><br>
+        <span style="font-weight: bold; color: #0066cc;">Guru Pengampu:</span><br>
+        1) Salim Ubaidillah, S.Kom.<br>
+        2) M. Izzul Haq, S.Pd.<br>
+        <span style="font-weight: bold; color: #0066cc;">Hari & Tanggal:</span><br>Senin, 1 Desember 2025<br>
+        <span style="font-weight: bold; color: #0066cc;">Waktu:</span> 30 Menit
+    </div>
+
+<div style="background-color: lightblue; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); width: 80%; max-width: 600px; text-align: justify; margin: 20px auto;">
+    <label for="nama">Nama:</label><br>
+    <input id="nama" type="text" placeholder="Masukkan nama" style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;"><br>
+    <div id="nameError" style="color: red; font-size: 12px; display: none;">Nama harus diisi</div><br>
+
+    <label for="kelas">Kelas:</label><br>
+    <select id="kelas" style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;">
+        <option value="" disabled selected>Pilih Kelas</option>
+        <option value="7A">7A</option>
+        <option value="7B">7B</option>
+        <option value="7C">7C</option>
+        <option value="7D">7D</option>
+    </select><br>
+	<div id="classError" style="color: red; font-size: 12px; display: none;">Kelas harus dipilih</div>
+</div>
+
+    
+	
+	
+    <div style="background-color: lightcyan; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); width: 80%; max-width: 600px; text-align: justify; margin: 20px auto;">
+        <h3 style="text-align: center; color: #333;">Peraturan Sumatif</h3>
+        <ol style="font-size: 16px; color: #555; line-height: 1.6;">
+  <li>Saya berjanji akan mengerjakan sendiri dan tidak mencontek.</li>
+  <li>Saya memahami sumatif hanya bisa dikerjakan sekali.</li>
+  <li>Saya memahami jika keluar aplikasi maka jawaban tidak bisa tersimpan.</li>
+  <li><b>Wajib Mengaktifkan Kamera</b> selama ujian berlangsung.</li>
+</ol>
+
+        <p style="font-style: italic; color: #888; font-size: 16px; line-height: 1.6;">Pastikan kamu sudah siap sebelum memulai sumatif ini. Berdoalah<br>Good Luck!!!</p>
+  	</div>
+
+    <div>
+        <input type="checkbox" id="agreeCheckbox">
+        <label for="agreeCheckbox" style="font-size: 14px; color: #555;">
+            Saya setuju dan memahami aturan tersebut
+        </label>
+    </div>
+    <div id="agreeError" style="color: red; font-size: 12px; display: none;">Persetujuan harus dicentang</div><br>
+
+    <button id="startButton" class="btn btn-primary" onclick="mulaiKuis()">Mulai Kuis</button>
+</div>
+
+
+<div id="quizPage" class="hide">
+  <div class="card">
+    
+    <div class="header-content">
+        <div class="text-info">
+            <h2 style="margin-top:0;">PSAS Koding / KKA</h2>
+            <p>Waktu tersisa: <span id="timer">30:00</span></p>
+            <p>Total soal: <b><span id="totalSoal"></span></b></p>
+        </div>
+
+        <div id="cameraContainer">
+            <video id="webcam" autoplay playsinline muted></video>
+        </div>
+    </div>
+    <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+
+    <button id="toggleNumberList" class="btn btn-secondary" onclick="toggleNumberList()">Sembunyikan Nomor Soal</button>
+    
+    <div class="number-list" id="numberList"></div>
+  </div>
+  
+  <br>
+  <div id="questionCard" class="card"></div>
+  <br>
+  
+  <div style="display: flex; justify-content: space-between; gap: 10px;">
+    <button class="btn btn-secondary" id="btn-sebelumnya" onclick="nav(-1)" disabled>Sebelumnya</button>
+    <button class="btn btn-danger" id="btn-selesai" style="display: none;" onclick="selesaiKuis()">Selesai</button>
+    <button class="btn btn-secondary" id="btn-selanjutnya" onclick="nav(1)">Selanjutnya</button>
+  </div>
+</div>
+
+<div id="donePage" class="card hide">
+  <h2>Terima kasih</h2>
+  <p>Kamu telah mengerjakan dan tidak dapat mengulangi lagi. Semoga Sukses!!!</p>
+
+  </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, set, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const firebaseConfig = {
+    databaseURL: "https://uas25-smp3-default-rtdb.asia-southeast1.firebasedatabase.app/"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+window.saveToFirebase = (p, d) => set(ref(db, p), d);
+window.updateFirebase = (p, d) => update(ref(db, p), d);
+</script>
+
+
+<script>
+// Hitung skor maksimal (hanya pg dan pgk yang bernilai)
+function computeMaxScore() {
+    let max = 0;
+    for (let i = 0; i < questions.length; i++) {
+        const q = questions[i];
+        // aturan soal: pg dan pgk bernilai 2 poin per soal (sesuai hitungSkor)
+        if (q.type === "pg" || q.type === "pgk") {
+            max += 2;
+        }
+    }
+    return max;
+}
+
+// ================= TOGGLE NOMOR SOAL =================
+function toggleNumberList() {
+    const numberListElement = document.getElementById("numberList");
+    const toggleButton = document.getElementById("toggleNumberList");
+
+    // Toggle visibility of the number list
+    numberListElement.classList.toggle("hide");
+
+    // Change the button text depending on the state
+    if (numberListElement.classList.contains("hide")) {
+        toggleButton.textContent = "Tampilkan Nomor Soal";
+    } else {
+        toggleButton.textContent = "Sembunyikan Nomor Soal";
+    }
+}
+
+// ================= DATA SOAL ================= 
+let pg = [
+    {
+        text: "Berikut ini pernyataan yang benar tentang apa yang dimaksud dengan algoritma adalah...",
+        options: ["Bahasa pemrograman khusus","Kumpulan instruksi acak","Urutan langkah sistematis untuk menyelesaikan masalah","Kode komputer"],
+        answer: 2
+    },
+    {
+        text: "Proses penulisan algoritma ke dalam bahasa yang dipahami komputer disebut...",
+        options: ["Writing","Pemrograman","Pengulangan","Percabangan"],
+        answer: 1
+    },
+    {
+        text: "Scratch merupakan bahasa pemrograman yang berbasis...",
+        options: ["Teks","Simbol","Blok visual","Alur logika"],
+        answer: 2
+    },
+    {
+        text: "Blok “move 10 steps” dalam scratch digunakan untuk...",
+        options: ["Menghapus sprite","Mengubah kostum","Menggerakan sprite","Menampilkan suara"],
+        answer: 2
+    },
+    {
+        text: "Simbol belah ketupat dalam flowchart digunakan untuk menyatakan...",
+        options: ["Input/output","Proses","Kondisi","Awal/akhir"],
+        answer: 2
+    },
+    {
+        text: "Dalam Scratch, sprite adalah...",
+        options: ["Latar belakang program","Kumpulan blok","Karakter atau objek dalam proyek","Nama variabel"],
+        answer: 2
+    },
+    {
+        text: "Fungsi dari blok “if on edge, bounce” adalah...",
+        options: ["Menyembunyikan sprite","Menghapus latar","Memantulkan sprite dari tepi","Memulai skrip"],
+        answer: 2
+    },
+    {
+        text: "Blok “say hello! For 2 seconds” digunakan untuk...",
+        options: ["Menyapa pengguna selama 2 detik","Mengubah sprite","Mengubah ukuran sprite","Menambah suara"],
+        answer: 0
+    },
+    {
+        text: "Jika kalian ingin sprite berbicara saat diklik maka blok yang digunakan adalah...",
+        options: ["When green flag clicked","When this sprite clicked","Repeat until","Play sound"],
+        answer: 1
+    },
+    {
+        text: "Fungsi dari blok “repeat 10” adalah...",
+        options: ["Mengulang selamanya","Mengulang sebanyak 10 kali","Mengulang hingga kondisi benar","Menyimpan variabel"],
+        answer: 1
+    },
+    {
+        text: "Dalam Scratch, broadcast digunakan untuk...",
+        options: ["Menggerakan sprite","Menyimpan data","Mengirim pesan antar sprite","Mengubah ekspresi"],
+        answer: 2
+    },
+    {
+        text: "Blok yang digunakan untuk membuat percabangan adalah...",
+        options: ["Forever","Glide","If...then","Broadcast"],
+        answer: 2
+    },
+    {
+        text: "Variabel digunakan untuk...",
+        options: ["Mengganti suara","Menyimpan nilai data","Menampilkan sprite","Mengubah warna"],
+        answer: 1
+    },
+    {
+        text: "Blok “join [apple] [banana]” menghasilkan...",
+        options: ["applebanana","bananaapple","apple banana","banana apple"],
+        answer: 0
+    },
+    {
+        text: "Untuk memutar suara sampai selesai, kalian dapat menggunakan blok...",
+        options: ["Play sound until done","Start sound","Stop all sounds","Say for 2 seconds"],
+        answer: 0
+    }
+];
+
+let pgk = [
+    {
+        text: "Berikut ini yang merupakan pengertian yang benar tentang algoritma adalah...",
+        options: [
+            "Urutan langkah sistematis untuk menyelesaikan masalah",
+            "Kumpulan instruksi acak",
+            "Proses penyusunan kode komputer secara langsung",
+            "Kumpulan instruksi yang dapat dieksekusi oleh komputer"
+        ],
+        answer: [0, 3]
+    },
+    {
+        text: "Dalam Scratch, sprite dapat memiliki berbagai fungsi. Berikut yang merupakan fungsi sprite dalam Scratch adalah...",
+        options: [
+            "Sprite berfungsi sebagai objek atau karakter dalam proyek",
+            "Sprite digunakan untuk menyimpan variabel",
+            "Sprite dapat bergerak dan berinteraksi dengan blok kode",
+            "Sprite berfungsi sebagai latar belakang program"
+        ],
+        answer: [0, 2]
+    },
+    {
+        text: "Fungsi dari blok 'repeat' dan 'if...then' adalah...",
+        options: [
+            "Blok 'repeat' digunakan untuk mengulang langkah tertentu beberapa kali",
+            "Blok 'repeat' digunakan untuk menjalankan perulangan tanpa batas",
+            "Blok 'if...then' digunakan untuk memeriksa suatu kondisi dan melaksanakan aksi jika kondisi tersebut benar",
+            "Blok 'if...then' digunakan untuk menghentikan perulangan"
+        ],
+        answer: [0, 2]
+    },
+    {
+        text: "Dalam pemrograman Scratch, blok 'broadcast' digunakan untuk...",
+        options: [
+            "Mengirim pesan antar sprite untuk koordinasi",
+            "Mengubah ekspresi visual dari sprite",
+            "Memulai eksekusi dari suatu event atau skrip",
+            "Menyimpan data yang digunakan antar sprite"
+        ],
+        answer: [0, 2]
+    },
+    {
+        text: "Fungsi dari blok 'say [teks] for [x] seconds' dan 'play sound [nama suara] until done' adalah...",
+        options: [
+            "Blok 'say' digunakan untuk menampilkan teks atau pesan dalam waktu tertentu",
+            "Blok 'say' digunakan untuk memutar suara",
+            "Blok 'play sound' digunakan untuk memutar suara sampai selesai",
+            "Blok 'play sound' digunakan untuk mengubah tampilan sprite"
+        ],
+        answer: [0, 2]
+    }
+];
+
+let essay = [
+    { text: "Mengapa pengelolaan data di era digital sekarang menjadi sangat penting? Berikan contoh manfaatnya!" },
+    { text: "Jika tiba-tiba lampu rumah kalian mati, langkah apa yang kalian lakukan? Buat langkah-langkah sistematis!" },
+    { text: "Bagaimana penggunaan variabel dapat membantu dalam pembuatan game di Scratch?" },
+    { text: "Perhatikan langkah-langkah mencuci tangan berikut ini!<br>a. Keringkan tangan dengan tisu<br>b. Bilas tangan hingga bersih<br>c. Basahi tangan dengan air<br>d. Gosok tangan dengan sabun selama 20 detik<br>e. Tutup keran dengan tangan beralaskan tisu<br>Apakah langkah-langkah mencuci tangan tersebut sudah sistematis? Jika belum, susun ulang yang benar!" },
+    { text: "Apa fungsi dari blok repeat until dan berikan contohnya?" }
+];
+
+// ================= FUNGSI RANDOM =================
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        let j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+// acak setiap kelompok
+shuffle(pg);
+shuffle(pgk);
+shuffle(essay);
+
+// gabungkan dalam urutan kelompok
+const questions = [
+    ...pg.map(q => ({ type: "pg", ...q })),
+    ...pgk.map(q => ({ type: "pgk", ...q })),
+    ...essay.map(q => ({ type: "essay", ...q }))
+];
+
+
+// ================= GLOBAL =================
+let curr = 0;
+let waktu = 30 * 60;  // 30 menit dalam detik
+let timerInterval;
+
+
+// ================= DATABASE LOCAL =================
+let DB = { nama: "", kelas: "", jawaban: {}, skor: 0 };
+
+// ================= KAMERA FUNCTION =================
+let mediaStream = null;
+
+async function startCamera() {
+    try {
+        const videoElement = document.getElementById('webcam');
+        const cameraContainer = document.getElementById('cameraContainer');
+        
+        // Minta akses kamera
+        mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        videoElement.srcObject = mediaStream;
+        
+        // Tampilkan elemen kamera
+        cameraContainer.style.display = "block";
+        
+        return true;
+    } catch (error) {
+        console.error("Gagal akses kamera:", error);
+        return false;
+    }
+}
+
+function stopCamera() {
+    if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        mediaStream = null;
+    }
+    document.getElementById('cameraContainer').style.display = "none";
+}
+
+// ================= MULAI KUIS =================
+async function mulaiKuis() {
+    let valid = true;
+
+    // Sembunyikan semua pesan error terlebih dahulu
+    document.getElementById("nameError").style.display = "none";
+    document.getElementById("classError").style.display = "none";
+    document.getElementById("agreeError").style.display = "none";
+
+    // Cek Nama
+    if (!nama.value) {
+        document.getElementById("nameError").style.display = "block";
+        valid = false;
+    }
+
+    // Cek Kelas
+    if (!kelas.value) {
+        document.getElementById("classError").style.display = "block";
+        valid = false;
+    }
+
+    // Cek Checkbox
+    if (!document.getElementById("agreeCheckbox").checked) {
+        document.getElementById("agreeError").style.display = "block";
+        valid = false;
+    }
+
+    // Jika ada input yang belum valid, hentikan
+    if (!valid) {
+        return;
+    }
+
+    // --- CEK IZIN KAMERA SEBELUM LANJUT ---
+    showToast("Meminta akses kamera...");
+    const cameraAllowed = await startCamera();
+    
+    if (!cameraAllowed) {
+        // Jika ditolak / gagal
+        closeToast(); // Tutup toast loading
+        showToast("Akses kamera WAJIB diizinkan untuk memulai kuis!");
+        return; // Berhenti di sini, tidak pindah halaman
+    }
+    
+    closeToast(); // Tutup toast jika berhasil
+
+    // Masuk mode fullscreen
+    if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+    } else if (document.documentElement.webkitRequestFullscreen) { 
+        document.documentElement.webkitRequestFullscreen(); // Safari
+    } else if (document.documentElement.msRequestFullscreen) { 
+        document.documentElement.msRequestFullscreen(); // IE/Edge lama
+    }
+	
+	    // Mencegah aksi copy, cut, dan paste setelah kuis dimulai
+    document.addEventListener('copy', function(e) {
+        e.preventDefault();
+        showToast("Tindakan menyalin teks tidak diperbolehkan selama kuis.");
+    });
+
+    document.addEventListener('paste', function(e) {
+        e.preventDefault();
+        showToast("Tindakan menempelkan teks tidak diperbolehkan selama kuis.");
+    });
+
+    document.addEventListener('cut', function(e) {
+        e.preventDefault();
+        showToast("Tindakan memotong teks tidak diperbolehkan selama kuis.");
+    });
+
+
+    // Deteksi saat keluar dari fullscreen dan refresh halaman jika kuis belum selesai
+    document.addEventListener('fullscreenchange', function() {
+        if (!document.fullscreenElement && !isFinishedQuiz) {
+            window.location.reload(); // Refresh halaman
+        }
+    });
+
+    document.addEventListener('webkitfullscreenchange', function() { 
+        if (!document.webkitFullscreenElement && !isFinishedQuiz) {
+            window.location.reload(); // Refresh halaman (Safari)
+        }
+    });
+
+    document.addEventListener('msfullscreenchange', function() { 
+        if (!document.msFullscreenElement && !isFinishedQuiz) {
+            window.location.reload(); // Refresh halaman (IE/Edge)
+        }
+    });
+
+    // Simpan data ke localStorage / Firebase
+    DB.nama = nama.value;
+    DB.kelas = kelas.value;
+    saveToFirebase(`jawaban/${DB.kelas}/${DB.nama}`, DB);
+
+    // Pindah ke halaman kuis
+    startPage.classList.add("hide");
+    quizPage.classList.remove("hide");
+
+    // Muat daftar soal dan mulai timer
+    loadNumberList();
+    loadQuestion(curr);
+    mulaiTimer();
+}
+
+
+// ================= NOMOR SOAL =================
+function loadNumberList() {
+    totalSoal.textContent = questions.length;
+    numberList.innerHTML = "";
+    for (let i = 0; i < questions.length; i++) {
+        let btn = document.createElement("div");
+        btn.className = "num-btn"; 
+        btn.textContent = i + 1;
+        
+        if (DB.jawaban[i] !== undefined && DB.jawaban[i] !== null && DB.jawaban[i] !== "") {
+            btn.classList.add("answered");
+        } else {
+            btn.classList.add("unanswered");
+        }
+
+        btn.onclick = () => { 
+            curr = i; 
+            loadQuestion(curr); 
+        };
+        
+        numberList.appendChild(btn);
+    }
+    updateActiveNumber();
+}
+
+function updateActiveNumber() {
+    const btns = document.querySelectorAll(".num-btn");
+    btns.forEach((b, i) => { b.classList.toggle("num-active", i === curr); });
+}
+
+// ================= SIMPAN JAWABAN =================
+function simpanJawaban(no, value) {
+    DB.jawaban[no] = value;
+    //localStorage.setItem(DB.nama + "_" + DB.kelas, JSON.stringify(DB));
+	updateFirebase(`jawaban/${DB.kelas}/${DB.nama}/jawaban`, DB.jawaban);
+    loadNumberList();
+}
+
+function updatePGK(no) {
+    const boxes = document.querySelectorAll(`input[name='q${no}']`);
+    const selected = [];
+    boxes.forEach(b => { if (b.checked) selected.push(Number(b.value)); });
+    simpanJawaban(no, selected);
+}
+
+// ================= TAMPILKAN SOAL =================
+function loadQuestion(i) {
+    const q = questions[i];
+    let html = `<h3>${i + 1}. ${q.text}</h3><br>`;
+
+    if (q.type === "pg") {
+        q.options.forEach((o, idx) => {
+            html += `<label style="display:block;margin-bottom:8px;"><input type="radio" name="q${i}" value="${idx}" ${DB.jawaban[i] == idx ? "checked" : ""} onchange="simpanJawaban(${i}, ${idx})"> ${o}</label>`;
+        });
+    } else if (q.type === "pgk") {
+        q.options.forEach((o, idx) => {
+            const checked = DB.jawaban[i]?.includes(idx) ? "checked" : "";
+            html += `<label style="display:block;margin-bottom:8px;"><input type="checkbox" name="q${i}" value="${idx}" ${checked} onchange="updatePGK(${i})"> ${o}</label>`;
+        });
+    } else if (q.type === "essay") {
+        html += `<textarea name="q${i}" rows="5" style="width:100%; padding:10px; font-size:15px;" onkeyup="simpanJawaban(${i}, this.value)">${DB.jawaban[i] || ""}</textarea>`;
+    }
+
+    const card = document.getElementById("questionCard");
+    card.innerHTML = html;
+    updateActiveNumber();
+
+    // Menampilkan tombol selesai hanya pada soal terakhir
+    if (curr === questions.length - 1) {
+        document.getElementById("btn-selesai").style.display = 'inline-block';
+        document.getElementById("btn-selanjutnya").style.display = 'none'; // Hilangkan tombol "Selanjutnya"
+    } else {
+        document.getElementById("btn-selesai").style.display = 'none';
+        document.getElementById("btn-selanjutnya").style.display = 'inline-block'; // Kembalikan tombol "Selanjutnya"
+        document.getElementById("btn-selanjutnya").disabled = false;
+    }
+    // Menyembunyikan tombol "Sebelumnya" jika bukan soal pertama
+    if (curr === 0) {
+        document.getElementById("btn-sebelumnya").style.display = 'none';  // Sembunyikan tombol "Sebelumnya" pada soal pertama
+    } else {
+        document.getElementById("btn-sebelumnya").style.display = 'inline-block'; // Tampilkan tombol "Sebelumnya" pada soal selain pertama
+    }
+	
+    // Mengaktifkan tombol sebelumnya jika bukan soal pertama
+    document.getElementById("btn-sebelumnya").disabled = (curr === 0);
+}
+
+
+// ================= NAVIGASI =================
+function nav(step) {
+    let old = curr; curr += step;
+    if (curr < 0) curr = 0; if (curr >= questions.length) curr = questions.length - 1;
+    let card = document.getElementById("questionCard");
+    if (curr > old) { card.classList.remove("slide-right"); card.classList.add("slide-left"); }
+    else { card.classList.remove("slide-left"); card.classList.add("slide-right"); }
+    loadQuestion(curr);
+    setTimeout(() => { card.classList.remove("slide-left"); card.classList.remove("slide-right"); }, 300);
+}
+
+// ================= TIMER =================
+function mulaiTimer() {
+    timerInterval = setInterval(() => {
+        waktu--;
+        let m = Math.floor(waktu / 60); let s = waktu % 60;
+        timer.textContent = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+        if (waktu <= 0) selesaiKuis();
+    }, 1000);
+}
+
+
+// Flag untuk melacak apakah kuis selesai
+let isFinishedQuiz = false;
+
+// ================= SELESAI =================
+function selesaiKuis() {
+    // Jika masih ada yang belum dijawab → tampilkan Toast
+    if (!checkAllAnswered()) {
+        showToast("Pastikan semua pertanyaan sudah dijawab.");
+        return;
+    }
+
+    // Modal konfirmasi YA/TIDAK
+    showConfirm((ok) => {
+        if (!ok) return; // jika pilih Tidak
+
+        clearInterval(timerInterval);
+        
+        // Matikan kamera
+        stopCamera();
+
+        // Hitung skor + persentase
+        const skor = hitungSkor();
+        const max = computeMaxScore();
+        const percent = max > 0 ? Math.round((skor / max) * 100) : 0;
+
+        // Simpan ke Firebase
+        updateFirebase(`jawaban/${DB.kelas}/${DB.nama}`, {
+            skor: skor,
+            persen: percent,
+            jawaban: DB.jawaban
+        });
+
+        /* Tampilkan hasil
+        document.getElementById('finalName').textContent = DB.nama || "-";
+        document.getElementById('finalClass').textContent = DB.kelas || "-";
+        document.getElementById('finalScore').textContent = skor;
+        document.getElementById('maxScore').textContent = max;
+        document.getElementById('percentScore').textContent = percent + "%";
+
+        const noteEl = document.getElementById('noteScore');
+        if (percent >= 80) noteEl.textContent = "Keren! Nilai kamu sangat baik.";
+        else if (percent >= 60) noteEl.textContent = "Bagus! Tapi masih bisa ditingkatkan.";
+        else noteEl.textContent = "Tetap semangat! Pelajari kembali materi yang belum dimengerti.";
+		*/
+
+        quizPage.classList.add("hide");
+        donePage.classList.remove("hide");
+        document.exitFullscreen();
+
+        // Set flag ke true menandakan kuis selesai
+        isFinishedQuiz = true;
+    });
+}
+
+
+// ================= HITUNG SKOR =================
+function hitungSkor() {
+    let skor = 0;
+
+    for (let i = 0; i < questions.length; i++) {
+        const q = questions[i];
+        const j = DB.jawaban[i];
+
+        if (q.type === "pg" && j == q.answer) skor += 2;
+
+        if (q.type === "pgk" &&
+            Array.isArray(j) &&
+            j.length === q.answer.length &&
+            q.answer.every(x => j.includes(x))
+        ) skor += 2;
+    }
+
+    DB.skor = skor;
+    return skor;
+}
+
+
+// ================= CEK SEMUA JAWABAN =================
+function checkAllAnswered() {
+    for (let i = 0; i < questions.length; i++) {
+        const q = questions[i];
+        const jawaban = DB.jawaban[i];
+        if (q.type === "pg" && (jawaban === undefined || jawaban === null)) return false;
+        if (q.type === "pgk" && (!Array.isArray(jawaban) || jawaban.length === 0)) return false;
+        if (q.type === "essay" && (!jawaban || jawaban.trim() === "")) return false;
+    }
+    return true;
+}
+
+
+function showToast(msg) {
+    document.getElementById("toastMessage").textContent = msg;
+    document.getElementById("toast").classList.remove("hidden");
+}
+
+function closeToast() {
+    document.getElementById("toast").classList.add("hidden");
+}
+
+// Modal konfirmasi
+function showConfirm(callback) {
+    const box = document.getElementById("confirmBox");
+    box.classList.remove("hidden");
+
+    document.getElementById("confirmYes").onclick = () => {
+        box.classList.add("hidden");
+        callback(true);
+    };
+
+    document.getElementById("confirmNo").onclick = () => {
+        box.classList.add("hidden");
+        callback(false);
+    };
+}
+
+</script>
+</body>
+</html>
