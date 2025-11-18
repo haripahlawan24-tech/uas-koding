@@ -68,9 +68,109 @@ input,textarea{border:1px solid #ccc; border-radius:8px; padding:10px; font-size
 @keyframes slideRight{ from{opacity:0; transform:translateX(-40px);} to{opacity:1; transform:translateX(0);} }
 
 @media(max-width:600px){ .number-list{justify-content:center;} .btn{width:100%; margin:5px 0;} }
+
+
+/* === TOAST === */
+.toast {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+    background: rgba(0,0,0,0.3);
+    z-index: 9999;
+}
+
+.toast.hidden {
+    display: none;
+}
+
+.toast-content {
+    background: rgba(255,255,255,0.85);
+    padding: 20px 25px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 25px rgba(0,0,0,0.3);
+}
+
+.toast-content button {
+    margin-top: 10px;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 6px;
+    background: #0074ff;
+    color: white;
+    cursor: pointer;
+}
+
+/* === CONFIRM MODAL === */
+.confirm {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+    background: rgba(0,0,0,0.35);
+    z-index: 10000;
+}
+
+.confirm.hidden {
+    display: none;
+}
+
+.confirm-content {
+    background: rgba(255,255,255,0.9);
+    padding: 25px;
+    border-radius: 14px;
+    width: 300px;
+    text-align: center;
+    box-shadow: 0 4px 25px rgba(0,0,0,0.3);
+}
+
+.btn-row {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.btn-row button {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #007bff;
+    color: white;
+}
+
+.btn-row button:last-child {
+    background: #666;
+}
+
+
 </style>
 </head>
 <body>
+
+<div id="toast" class="toast hidden">
+    <div class="toast-content">
+        <p id="toastMessage"></p>
+        <button onclick="closeToast()">OK</button>
+    </div>
+</div>
+
+<div id="confirmBox" class="confirm hidden">
+    <div class="confirm-content">
+        <p id="confirmMessage">Apa kamu yakin mengumpulkan?</p>
+        <div class="btn-row">
+            <button id="confirmYes">Ya</button>
+            <button id="confirmNo">Tidak</button>
+        </div>
+    </div>
+</div>
+
 <div class="container">
 
 <!-- HALAMAN AWAL -->
@@ -159,7 +259,7 @@ input,textarea{border:1px solid #ccc; border-radius:8px; padding:10px; font-size
   <h2>Terima kasih</h2>
   <p>Kamu telah mengerjakan dan tidak dapat mengulangi lagi. Semoga Sukses!!!</p>
 
-  <!-- Tambahan: tampilan skor -->
+  <!-- Tambahan: tampilan skor 
   <div style="margin-top:20px; padding:15px; background:#f3f4f6; border-radius:10px;">
     <h3>Hasil Kamu</h3>
     <p><strong>Nama:</strong> <span id="finalName">-</span></p>
@@ -421,17 +521,24 @@ function mulaiKuis() {
         valid = false;
     }
 
-    // Jika ada input yang belum valid, jangan lanjutkan dan tampilkan pesan error
+    // Jika ada input yang belum valid, hentikan
     if (!valid) {
         return;
     }
 
-    // Simpan data ke localStorage jika semua valid
+    // Masuk mode fullscreen
+    if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+    } else if (document.documentElement.webkitRequestFullscreen) { 
+        document.documentElement.webkitRequestFullscreen(); // Safari
+    } else if (document.documentElement.msRequestFullscreen) { 
+        document.documentElement.msRequestFullscreen(); // IE/Edge lama
+    }
+
+    // Simpan data ke localStorage / Firebase
     DB.nama = nama.value;
     DB.kelas = kelas.value;
-    //localStorage.setItem(DB.nama + "_" + DB.kelas, JSON.stringify(DB));
-	saveToFirebase(`jawaban/${DB.kelas}/${DB.nama}`, DB); //ke FIREBASE
-
+    saveToFirebase(`jawaban/${DB.kelas}/${DB.nama}`, DB);
 
     // Pindah ke halaman kuis
     startPage.classList.add("hide");
@@ -556,42 +663,49 @@ function mulaiTimer() {
 
 // ================= SELESAI =================
 function selesaiKuis() {
+    // Jika masih ada yang belum dijawab → tampilkan Toast
     if (!checkAllAnswered()) {
-        alert("Pastikan semua pertanyaan sudah dijawab.");
+        showToast("Pastikan semua pertanyaan sudah dijawab.");
         return;
     }
 
-    if (!confirm("Apa kamu yakin mengumpulkan?")) return;
+    // Modal konfirmasi YA/TIDAK
+    showConfirm((ok) => {
+        if (!ok) return; // jika pilih Tidak
 
-    clearInterval(timerInterval);
+        clearInterval(timerInterval);
 
-    // Hitung skor + persentase
-    const skor = hitungSkor();
-    const max = computeMaxScore();
-    const percent = max > 0 ? Math.round((skor / max) * 100) : 0;
+        // Hitung skor + persentase
+        const skor = hitungSkor();
+        const max = computeMaxScore();
+        const percent = max > 0 ? Math.round((skor / max) * 100) : 0;
 
-    // Simpan ke Firebase
-    updateFirebase(`jawaban/${DB.kelas}/${DB.nama}`, {
-        skor: skor,
-        persen: percent,
-        jawaban: DB.jawaban
+        // Simpan ke Firebase
+        updateFirebase(`jawaban/${DB.kelas}/${DB.nama}`, {
+            skor: skor,
+            persen: percent,
+            jawaban: DB.jawaban
+        });
+
+        /* Tampilkan hasil
+        document.getElementById('finalName').textContent = DB.nama || "-";
+        document.getElementById('finalClass').textContent = DB.kelas || "-";
+        document.getElementById('finalScore').textContent = skor;
+        document.getElementById('maxScore').textContent = max;
+        document.getElementById('percentScore').textContent = percent + "%";
+
+        const noteEl = document.getElementById('noteScore');
+        if (percent >= 80) noteEl.textContent = "Keren! Nilai kamu sangat baik.";
+        else if (percent >= 60) noteEl.textContent = "Bagus! Tapi masih bisa ditingkatkan.";
+        else noteEl.textContent = "Tetap semangat! Pelajari kembali materi yang belum dimengerti.";
+		*/
+
+        quizPage.classList.add("hide");
+        donePage.classList.remove("hide");
+		document.exitFullscreen();
     });
-
-    // Tampilkan hasil akhir
-    document.getElementById('finalName').textContent = DB.nama || "-";
-    document.getElementById('finalClass').textContent = DB.kelas || "-";
-    document.getElementById('finalScore').textContent = skor;
-    document.getElementById('maxScore').textContent = max;
-    document.getElementById('percentScore').textContent = percent + "%";
-
-    const noteEl = document.getElementById('noteScore');
-    if (percent >= 80) noteEl.textContent = "Keren! Nilai kamu sangat baik.";
-    else if (percent >= 60) noteEl.textContent = "Bagus! Tapi masih bisa ditingkatkan.";
-    else noteEl.textContent = "Tetap semangat! Pelajari kembali materi yang belum dimengerti.";
-
-    quizPage.classList.add("hide");
-    donePage.classList.remove("hide");
 }
+
 
 
 // ================= HITUNG SKOR =================
@@ -627,6 +741,35 @@ function checkAllAnswered() {
     }
     return true;
 }
+
+
+function showToast(msg) {
+    document.getElementById("toastMessage").textContent = msg;
+    document.getElementById("toast").classList.remove("hidden");
+}
+
+function closeToast() {
+    document.getElementById("toast").classList.add("hidden");
+}
+
+// Modal konfirmasi
+function showConfirm(callback) {
+    const box = document.getElementById("confirmBox");
+    box.classList.remove("hidden");
+
+    document.getElementById("confirmYes").onclick = () => {
+        box.classList.add("hidden");
+        callback(true);
+    };
+
+    document.getElementById("confirmNo").onclick = () => {
+        box.classList.add("hidden");
+        callback(false);
+    };
+}
+
+
+
 </script>
 </body>
 </html>
