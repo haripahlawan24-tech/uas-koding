@@ -443,7 +443,7 @@ function shuffle(array) {
     }
     return array;
 }
-shuffle(pg); shuffle(pgk); shuffle(essay);
+shuffle(pg); shuffle(pgk); //shuffle(essay);
 const questions = [...pg.map(q => ({ type: "pg", ...q })), ...pgk.map(q => ({ type: "pgk", ...q })), ...essay.map(q => ({ type: "essay", ...q }))];
 
 function computeMaxScore() {
@@ -779,4 +779,5 @@ keyboard.querySelectorAll('.key-btn').forEach(button => {
 });
 </script>
 </body>
+
 </html>
